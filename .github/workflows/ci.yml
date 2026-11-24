@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      # Native PostgreSQL preinstalled on the runner; no containers.
+      TEST_DATABASE_URL: postgres://ledgerline:ledgerline-ci@localhost:5432/ledgerline_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start PostgreSQL
+        run: |
+          sudo systemctl start postgresql.service
+          for i in $(seq 1 30); do pg_isready -h localhost && break; sleep 1; done
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -c "CREATE ROLE ledgerline LOGIN PASSWORD 'ledgerline-ci'"
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE ledgerline_test OWNER ledgerline"
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -d ledgerline_test -c "ALTER SCHEMA public OWNER TO ledgerline"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      - run: npm run build
