@@ -1,0 +1,3583 @@
+openapi: 3.1.0
+info:
+  title: Ledgerline API
+  version: 0.1.0
+  description:
+    Multi-entity double-entry accounting and financial close. Every operation carries `x-status` (`implemented`
+    or `pending`); pending operations carry `x-ticket` and currently answer 501. All responses use the envelope
+    `{ data, error, meta }`. Money is decimal strings in the line currency; never JSON numbers.
+  license:
+    name: MIT
+servers:
+  - url: http://127.0.0.1:4101/api/v1
+    description: Local development
+  - url: /api/v1
+    description: Behind nginx
+tags:
+  - name: Health
+  - name: Auth
+  - name: Audit
+  - name: Entities
+  - name: Accounts
+  - name: Periods
+  - name: FX
+  - name: Journals
+  - name: Reports
+  - name: Users & access
+  - name: Close
+  - name: Consolidation
+  - name: Reconciliation
+  - name: Approvals
+  - name: Platform
+paths:
+  /api-tokens:
+    get:
+      tags:
+        - Platform
+      operationId: pendingGetApiTokens
+      summary: List read API tokens
+      x-status: pending
+      x-ticket: LL-110
+      description: Planned (LL-110). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-110"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: &id001
+        - sessionCookie: []
+    post:
+      tags:
+        - Platform
+      operationId: pendingPostApiTokens
+      summary: Create a read API token
+      x-status: pending
+      x-ticket: LL-110
+      description: Planned (LL-110). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-110"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: &id002
+        - sessionCookie: []
+          csrfHeader: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /approval-policies:
+    get:
+      tags:
+        - Approvals
+      operationId: pendingGetApprovalPolicies
+      summary: List approval policies
+      x-status: pending
+      x-ticket: LL-080
+      description: Planned (LL-080). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-080"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+    post:
+      tags:
+        - Approvals
+      operationId: pendingPostApprovalPolicies
+      summary: Create an approval policy
+      x-status: pending
+      x-ticket: LL-080
+      description: Planned (LL-080). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-080"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /approvals/inbox:
+    get:
+      tags:
+        - Approvals
+      operationId: pendingGetApprovalsInbox
+      summary: My pending approvals
+      x-status: pending
+      x-ticket: LL-081
+      description: Planned (LL-081). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-081"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+  /audit-events:
+    get:
+      tags:
+        - Audit
+      operationId: listAuditEvents
+      summary: Audit trail (newest first)
+      x-status: implemented
+      description: Requires permission `audit.view`.
+      parameters:
+        - &id005
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - &id006
+          name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: action
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: targetType
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: targetId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditEvent'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security: *id001
+  /audit-events/verify:
+    get:
+      tags:
+        - Users & access
+      operationId: pendingGetAuditEventsVerify
+      summary: Verify audit hash chain
+      x-status: pending
+      x-ticket: LL-019
+      description: Planned (LL-019). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-019"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      operationId: login
+      summary: Sign in
+      x-status: implemented
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Signed in. Sets `ll_session` (HttpOnly) and `ll_csrf` cookies.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LoginResponse'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+      security: []
+      description:
+        Throttled by normalised IP (fixed window), distinct emails per IP, and per-email progressive
+        backoff.
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      operationId: logout
+      summary: Sign out and revoke the session
+      x-status: implemented
+      responses:
+        '200':
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      loggedOut:
+                        type: boolean
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security: *id002
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      operationId: getMe
+      summary: Current user, organization, role and permissions
+      x-status: implemented
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Profile'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+  /auth/mfa/totp:
+    post:
+      tags:
+        - Users & access
+      operationId: pendingPostAuthMfaTotp
+      summary: Enrol a TOTP authenticator
+      x-status: pending
+      x-ticket: LL-018
+      description: Planned (LL-018). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-018"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /auth/password-reset:
+    post:
+      tags:
+        - Users & access
+      operationId: pendingPostAuthPasswordReset
+      summary: Request a password reset
+      x-status: pending
+      x-ticket: LL-015
+      description: Planned (LL-015). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-015"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      operationId: register
+      summary: Register an organization and its owner
+      x-status: implemented
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '202':
+          description: Accepted; identical response whether or not the email exists. No session is started.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+      security: []
+      description:
+        Never reveals whether the email is already registered. Rate-limited per normalised client IP.
+        Email verification is planned (LL-120).
+  /auth/register/verify:
+    post:
+      tags:
+        - Users & access
+      operationId: pendingPostAuthRegisterVerify
+      summary: Confirm sign-up via emailed token
+      x-status: pending
+      x-ticket: LL-120
+      description: Planned (LL-120). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-120"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /auth/sessions:
+    get:
+      tags:
+        - Users & access
+      operationId: pendingGetAuthSessions
+      summary: List my active sessions
+      x-status: pending
+      x-ticket: LL-016
+      description: Planned (LL-016). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-016"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+  /auth/sessions/{sessionId}:
+    delete:
+      tags:
+        - Users & access
+      operationId: pendingDeleteAuthSessionsSessionid
+      summary: Revoke a session
+      x-status: pending
+      x-ticket: LL-016
+      description: Planned (LL-016). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-016"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+  /bank-accounts/{bankAccountId}/statements:
+    post:
+      tags:
+        - Reconciliation
+      operationId: pendingPostBankAccountsBankaccountidStatements
+      summary: Import a CSV/OFX statement
+      x-status: pending
+      x-ticket: LL-071
+      description: Planned (LL-071). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-071"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: bankAccountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /bank-statements/{statementId}/auto-match:
+    post:
+      tags:
+        - Reconciliation
+      operationId: pendingPostBankStatementsStatementidAutoMatch
+      summary: Run the matching engine
+      x-status: pending
+      x-ticket: LL-073
+      description: Planned (LL-073). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-073"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: statementId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /bank-statements/{statementId}/complete:
+    post:
+      tags:
+        - Reconciliation
+      operationId: pendingPostBankStatementsStatementidComplete
+      summary: Sign off reconciliation
+      x-status: pending
+      x-ticket: LL-075
+      description: Planned (LL-075). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-075"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: statementId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /bank-statements/{statementId}/lines:
+    get:
+      tags:
+        - Reconciliation
+      operationId: pendingGetBankStatementsStatementidLines
+      summary: Statement lines
+      x-status: pending
+      x-ticket: LL-071
+      description: Planned (LL-071). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-071"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: statementId
+          in: path
+          required: true
+          schema:
+            type: string
+  /bank-statements/{statementId}/matches:
+    post:
+      tags:
+        - Reconciliation
+      operationId: pendingPostBankStatementsStatementidMatches
+      summary: Confirm a manual match
+      x-status: pending
+      x-ticket: LL-074
+      description: Planned (LL-074). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-074"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: statementId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /bank-statements/{statementId}/matches/{matchId}:
+    delete:
+      tags:
+        - Reconciliation
+      operationId: pendingDeleteBankStatementsStatementidMatchesMatchid
+      summary: Undo a match
+      x-status: pending
+      x-ticket: LL-074
+      description: Planned (LL-074). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-074"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: statementId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+  /close/status:
+    get:
+      tags:
+        - Close
+      operationId: pendingGetCloseStatus
+      summary: Close status across entities
+      x-status: pending
+      x-ticket: LL-044
+      description: Planned (LL-044). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-044"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+  /consolidation-groups:
+    get:
+      tags:
+        - Consolidation
+      operationId: pendingGetConsolidationGroups
+      summary: List consolidation groups
+      x-status: pending
+      x-ticket: LL-062
+      description: Planned (LL-062). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-062"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+    post:
+      tags:
+        - Consolidation
+      operationId: pendingPostConsolidationGroups
+      summary: Create a consolidation group
+      x-status: pending
+      x-ticket: LL-062
+      description: Planned (LL-062). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-062"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /consolidation-groups/{groupId}/runs:
+    post:
+      tags:
+        - Consolidation
+      operationId: pendingPostConsolidationGroupsGroupidRuns
+      summary: Run a consolidation
+      x-status: pending
+      x-ticket: LL-062
+      description: Planned (LL-062). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-062"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /consolidation-groups/{groupId}/runs/{runId}/trial-balance:
+    get:
+      tags:
+        - Consolidation
+      operationId: pendingGetConsolidationGroupsGroupidRunsRunidTrialBalance
+      summary: Consolidated trial balance with eliminations and NCI
+      x-status: pending
+      x-ticket: LL-065
+      description: Planned (LL-065). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-065"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+  /dimensions:
+    get:
+      tags:
+        - Accounts
+      operationId: pendingGetDimensions
+      summary: List analysis dimensions
+      x-status: pending
+      x-ticket: LL-026
+      description: Planned (LL-026). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-026"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+  /elimination-rules:
+    get:
+      tags:
+        - Consolidation
+      operationId: pendingGetEliminationRules
+      summary: List elimination rules
+      x-status: pending
+      x-ticket: LL-063
+      description: Planned (LL-063). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-063"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+    post:
+      tags:
+        - Consolidation
+      operationId: pendingPostEliminationRules
+      summary: Create an elimination rule
+      x-status: pending
+      x-ticket: LL-063
+      description: Planned (LL-063). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-063"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities:
+    get:
+      tags:
+        - Entities
+      operationId: listEntities
+      summary: List legal entities
+      x-status: implemented
+      description: Requires permission `entity.view`.
+      responses:
+        '200':
+          description: Entities
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Entity'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security: *id001
+    post:
+      tags:
+        - Entities
+      operationId: createEntity
+      summary: Create a legal entity (optionally with the standard chart)
+      x-status: implemented
+      description: Requires permission `entity.manage`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEntityRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Entity'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security: *id002
+  /entities/{entityId}:
+    get:
+      tags:
+        - Entities
+      operationId: getEntity
+      summary: Get an entity
+      x-status: implemented
+      description: Requires permission `entity.view`.
+      parameters:
+        - &id003
+          name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Entity
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Entity'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id001
+  /entities/{entityId}/access:
+    put:
+      tags:
+        - Users & access
+      operationId: pendingPutEntitiesEntityidAccess
+      summary: Assign users to an entity
+      x-status: pending
+      x-ticket: LL-017
+      description: Planned (LL-017). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-017"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/accounts:
+    get:
+      tags:
+        - Accounts
+      operationId: listAccounts
+      summary: Chart of accounts
+      x-status: implemented
+      description: Requires permission `entity.view`.
+      parameters:
+        - *id003
+        - name: includeInactive
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'true'
+      responses:
+        '200':
+          description: Accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Account'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id001
+    post:
+      tags:
+        - Accounts
+      operationId: createAccount
+      summary: Create an account
+      x-status: implemented
+      description: Requires permission `account.manage`.
+      parameters:
+        - *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      security: *id002
+  /entities/{entityId}/accounts/export:
+    get:
+      tags:
+        - Accounts
+      operationId: pendingGetEntitiesEntityidAccountsExport
+      summary: Export the chart of accounts
+      x-status: pending
+      x-ticket: LL-024
+      description: Planned (LL-024). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-024"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+  /entities/{entityId}/accounts/import:
+    post:
+      tags:
+        - Accounts
+      operationId: pendingPostEntitiesEntityidAccountsImport
+      summary: Import accounts from CSV
+      x-status: pending
+      x-ticket: LL-024
+      description: Planned (LL-024). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-024"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/accounts/{accountId}:
+    get:
+      tags:
+        - Accounts
+      operationId: getAccount
+      summary: Get an account
+      x-status: implemented
+      description: Requires permission `entity.view`.
+      parameters:
+        - *id003
+        - &id004
+          name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Account
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id001
+    patch:
+      tags:
+        - Accounts
+      operationId: updateAccount
+      summary: Rename, (de)activate or re-parent an account
+      x-status: implemented
+      description: Requires permission `account.manage`.
+      parameters:
+        - *id003
+        - *id004
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAccountRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      security: *id002
+  /entities/{entityId}/accounts/{accountId}/activity:
+    get:
+      tags:
+        - Journals
+      operationId: pendingGetEntitiesEntityidAccountsAccountidActivity
+      summary: Account activity drill-down
+      x-status: pending
+      x-ticket: LL-038
+      description: Planned (LL-038). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-038"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+  /entities/{entityId}/accounts/{accountId}/group-mapping:
+    put:
+      tags:
+        - Accounts
+      operationId: pendingPutEntitiesEntityidAccountsAccountidGroupMapping
+      summary: Map to group chart
+      x-status: pending
+      x-ticket: LL-025
+      description: Planned (LL-025). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-025"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/bank-accounts:
+    get:
+      tags:
+        - Reconciliation
+      operationId: pendingGetEntitiesEntityidBankAccounts
+      summary: List bank accounts
+      x-status: pending
+      x-ticket: LL-070
+      description: Planned (LL-070). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-070"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+    post:
+      tags:
+        - Reconciliation
+      operationId: pendingPostEntitiesEntityidBankAccounts
+      summary: Link a bank account to a GL account
+      x-status: pending
+      x-ticket: LL-070
+      description: Planned (LL-070). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-070"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/budgets:
+    get:
+      tags:
+        - Reports
+      operationId: pendingGetEntitiesEntityidBudgets
+      summary: Budgets for budget-vs-actual
+      x-status: pending
+      x-ticket: LL-097
+      description: Planned (LL-097). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-097"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+  /entities/{entityId}/fiscal-years:
+    post:
+      tags:
+        - Periods
+      operationId: createFiscalYear
+      summary: Generate monthly periods for a fiscal year
+      x-status: implemented
+      description: Requires permission `period.manage`.
+      parameters:
+        - *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFiscalYearRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Period'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security: *id002
+  /entities/{entityId}/fiscal-years/{fiscalYear}/close:
+    post:
+      tags:
+        - Close
+      operationId: pendingPostEntitiesEntityidFiscalYearsFiscalyearClose
+      summary: Year-end close
+      x-status: pending
+      x-ticket: LL-042
+      description: Planned (LL-042). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-042"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fiscalYear
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/journals:
+    get:
+      tags:
+        - Journals
+      operationId: listJournals
+      summary: List journal entries
+      x-status: implemented
+      description: Requires permission `entity.view`.
+      parameters:
+        - *id003
+        - *id005
+        - *id006
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - draft
+              - posted
+              - reversed
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Entries
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JournalSummary'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id001
+    post:
+      tags:
+        - Journals
+      operationId: createJournal
+      summary: Create a draft or post a journal entry
+      x-status: implemented
+      description: Requires permission `journal.create (and journal.post when post=true)`.
+      parameters:
+        - *id003
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9_.:-]{8,100}$
+          description:
+            'Retries with the same key and payload replay the original entry (200 + `Idempotent-Replayed:
+            true`).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJournalRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/JournalEntry'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '200':
+          description: Idempotent replay
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/JournalEntry'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      security: *id002
+  /entities/{entityId}/journals/import:
+    post:
+      tags:
+        - Journals
+      operationId: pendingPostEntitiesEntityidJournalsImport
+      summary: Bulk import journals from CSV
+      x-status: pending
+      x-ticket: LL-039
+      description: Planned (LL-039). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-039"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/journals/preview:
+    post:
+      tags:
+        - Journals
+      operationId: previewJournal
+      summary: Validate and convert without saving
+      x-status: implemented
+      description: Requires permission `journal.create`.
+      parameters:
+        - *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JournalInput'
+      responses:
+        '200':
+          description: Preview
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/JournalPreview'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      security: *id002
+  /entities/{entityId}/journals/{journalId}:
+    get:
+      tags:
+        - Journals
+      operationId: getJournal
+      summary: Journal entry with lines
+      x-status: implemented
+      description: Requires permission `entity.view`.
+      parameters:
+        - *id003
+        - &id007
+          name: journalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Entry
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/JournalEntry'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id001
+    patch:
+      tags:
+        - Journals
+      operationId: pendingPatchEntitiesEntityidJournalsJournalid
+      summary: Edit a draft entry
+      x-status: pending
+      x-ticket: LL-036
+      description: Planned (LL-036). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-036"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: journalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+    delete:
+      tags:
+        - Journals
+      operationId: pendingDeleteEntitiesEntityidJournalsJournalid
+      summary: Discard a draft entry
+      x-status: pending
+      x-ticket: LL-036
+      description: Planned (LL-036). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-036"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: journalId
+          in: path
+          required: true
+          schema:
+            type: string
+  /entities/{entityId}/journals/{journalId}/approve:
+    post:
+      tags:
+        - Approvals
+      operationId: pendingPostEntitiesEntityidJournalsJournalidApprove
+      summary: Approve a submitted entry
+      x-status: pending
+      x-ticket: LL-081
+      description: Planned (LL-081). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-081"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: journalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/journals/{journalId}/attachments:
+    post:
+      tags:
+        - Journals
+      operationId: pendingPostEntitiesEntityidJournalsJournalidAttachments
+      summary: Attach a document
+      x-status: pending
+      x-ticket: LL-037
+      description: Planned (LL-037). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-037"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: journalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/journals/{journalId}/post:
+    post:
+      tags:
+        - Journals
+      operationId: postJournal
+      summary: Post a draft (re-validated, numbered)
+      x-status: implemented
+      description: Requires permission `journal.post`.
+      parameters:
+        - *id003
+        - *id007
+      responses:
+        '200':
+          description: Posted
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/JournalEntry'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      security: *id002
+  /entities/{entityId}/journals/{journalId}/reject:
+    post:
+      tags:
+        - Approvals
+      operationId: pendingPostEntitiesEntityidJournalsJournalidReject
+      summary: Reject a submitted entry
+      x-status: pending
+      x-ticket: LL-081
+      description: Planned (LL-081). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-081"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: journalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/journals/{journalId}/reverse:
+    post:
+      tags:
+        - Journals
+      operationId: pendingPostEntitiesEntityidJournalsJournalidReverse
+      summary: Reverse a posted entry
+      x-status: pending
+      x-ticket: LL-035
+      description: Planned (LL-035). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-035"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: journalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/journals/{journalId}/submit:
+    post:
+      tags:
+        - Approvals
+      operationId: pendingPostEntitiesEntityidJournalsJournalidSubmit
+      summary: Submit a draft for approval
+      x-status: pending
+      x-ticket: LL-081
+      description: Planned (LL-081). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-081"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: journalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/ownership:
+    put:
+      tags:
+        - Accounts
+      operationId: pendingPutEntitiesEntityidOwnership
+      summary: Set parent entity and ownership %
+      x-status: pending
+      x-ticket: LL-027
+      description: Planned (LL-027). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-027"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/periods:
+    get:
+      tags:
+        - Periods
+      operationId: listPeriods
+      summary: Accounting periods
+      x-status: implemented
+      description: Requires permission `entity.view`.
+      parameters:
+        - *id003
+        - name: fiscalYear
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Periods
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Period'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id001
+  /entities/{entityId}/periods/{periodId}/checklist:
+    get:
+      tags:
+        - Close
+      operationId: pendingGetEntitiesEntityidPeriodsPeriodidChecklist
+      summary: Close checklist for a period
+      x-status: pending
+      x-ticket: LL-041
+      description: Planned (LL-041). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-041"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: periodId
+          in: path
+          required: true
+          schema:
+            type: string
+  /entities/{entityId}/periods/{periodId}/checklist/tasks:
+    post:
+      tags:
+        - Close
+      operationId: pendingPostEntitiesEntityidPeriodsPeriodidChecklistTasks
+      summary: Add a close task
+      x-status: pending
+      x-ticket: LL-041
+      description: Planned (LL-041). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-041"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: periodId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/periods/{periodId}/reopen:
+    post:
+      tags:
+        - Close
+      operationId: pendingPostEntitiesEntityidPeriodsPeriodidReopen
+      summary: Re-open a closed period
+      x-status: pending
+      x-ticket: LL-043
+      description: Planned (LL-043). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-043"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: periodId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/periods/{periodId}/transition:
+    post:
+      tags:
+        - Periods
+      operationId: transitionPeriod
+      summary: Change period status (open, soft_closed, closed)
+      x-status: implemented
+      description: Requires `period.manage`. `409 INVALID_PERIOD_TRANSITION` or `PERIOD_HAS_DRAFTS`.
+      parameters:
+        - *id003
+        - name: periodId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PeriodTransitionRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Period'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security: *id002
+  /entities/{entityId}/recurring-journals:
+    get:
+      tags:
+        - Approvals
+      operationId: pendingGetEntitiesEntityidRecurringJournals
+      summary: List recurring templates
+      x-status: pending
+      x-ticket: LL-085
+      description: Planned (LL-085). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-085"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+    post:
+      tags:
+        - Approvals
+      operationId: pendingPostEntitiesEntityidRecurringJournals
+      summary: Create a recurring template
+      x-status: pending
+      x-ticket: LL-085
+      description: Planned (LL-085). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-085"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/recurring-journals/{templateId}/run:
+    post:
+      tags:
+        - Approvals
+      operationId: pendingPostEntitiesEntityidRecurringJournalsTemplateidRun
+      summary: Generate due entries
+      x-status: pending
+      x-ticket: LL-086
+      description: Planned (LL-086). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-086"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/reports/balance-sheet:
+    get:
+      tags:
+        - Reports
+      operationId: pendingGetEntitiesEntityidReportsBalanceSheet
+      summary: Balance sheet
+      x-status: pending
+      x-ticket: LL-092
+      description: Planned (LL-092). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-092"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+  /entities/{entityId}/reports/cash-flow:
+    get:
+      tags:
+        - Reports
+      operationId: pendingGetEntitiesEntityidReportsCashFlow
+      summary: Cash-flow statement (indirect)
+      x-status: pending
+      x-ticket: LL-093
+      description: Planned (LL-093). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-093"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+  /entities/{entityId}/reports/exports:
+    post:
+      tags:
+        - Reports
+      operationId: pendingPostEntitiesEntityidReportsExports
+      summary: Export a report to CSV/HTML
+      x-status: pending
+      x-ticket: LL-094
+      description: Planned (LL-094). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-094"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/reports/general-ledger:
+    get:
+      tags:
+        - Journals
+      operationId: pendingGetEntitiesEntityidReportsGeneralLedger
+      summary: General ledger detail
+      x-status: pending
+      x-ticket: LL-038
+      description: Planned (LL-038). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-038"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+  /entities/{entityId}/reports/income-statement:
+    get:
+      tags:
+        - Reports
+      operationId: pendingGetEntitiesEntityidReportsIncomeStatement
+      summary: Income statement
+      x-status: pending
+      x-ticket: LL-091
+      description: Planned (LL-091). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-091"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+  /entities/{entityId}/reports/trial-balance:
+    get:
+      tags:
+        - Reports
+      operationId: getTrialBalance
+      summary: Trial balance
+      x-status: implemented
+      description: Requires permission `report.view`.
+      parameters:
+        - *id003
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Defaults to the fiscal-year start of `to`
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Defaults to today
+        - name: includeZero
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+      responses:
+        '200':
+          description: Trial balance
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TrialBalance'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      security: *id001
+  /entities/{entityId}/revaluations:
+    post:
+      tags:
+        - FX
+      operationId: pendingPostEntitiesEntityidRevaluations
+      summary: Run period-end revaluation
+      x-status: pending
+      x-ticket: LL-052
+      description: Planned (LL-052). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-052"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+    get:
+      tags:
+        - FX
+      operationId: pendingGetEntitiesEntityidRevaluations
+      summary: List revaluation runs
+      x-status: pending
+      x-ticket: LL-052
+      description: Planned (LL-052). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-052"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+  /entities/{entityId}/revaluations/preview:
+    post:
+      tags:
+        - FX
+      operationId: pendingPostEntitiesEntityidRevaluationsPreview
+      summary: Preview period-end revaluation
+      x-status: pending
+      x-ticket: LL-052
+      description: Planned (LL-052). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-052"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /entities/{entityId}/settings:
+    patch:
+      tags:
+        - Entities
+      operationId: updateEntitySettings
+      summary: Set FX rounding and retained-earnings accounts
+      x-status: implemented
+      description: Requires permission `entity.manage`.
+      parameters:
+        - *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntitySettingsRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Entity'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      security: *id002
+  /entities/{entityId}/translations:
+    post:
+      tags:
+        - FX
+      operationId: pendingPostEntitiesEntityidTranslations
+      summary: Translate to presentation currency
+      x-status: pending
+      x-ticket: LL-055
+      description: Planned (LL-055). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-055"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /fx-rates:
+    get:
+      tags:
+        - FX
+      operationId: listFxRates
+      summary: FX rates
+      x-status: implemented
+      description: Requires permission `entity.view`.
+      parameters:
+        - *id005
+        - *id006
+        - name: fromCurrency
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CurrencyCode'
+        - name: toCurrency
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CurrencyCode'
+      responses:
+        '200':
+          description: Rates
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FxRate'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security: *id001
+    post:
+      tags:
+        - FX
+      operationId: createFxRate
+      summary: Add an FX rate
+      x-status: implemented
+      description: Requires permission `fx.manage`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFxRateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FxRate'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security: *id002
+  /fx-rates/import:
+    post:
+      tags:
+        - FX
+      operationId: pendingPostFxRatesImport
+      summary: Import rates from CSV
+      x-status: pending
+      x-ticket: LL-051
+      description: Planned (LL-051). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-051"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /health:
+    get:
+      tags:
+        - Health
+      operationId: getHealth
+      summary: Liveness
+      x-status: implemented
+      responses:
+        '200':
+          description: Process is up
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Health'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+      security: []
+  /intercompany-transactions:
+    get:
+      tags:
+        - Consolidation
+      operationId: pendingGetIntercompanyTransactions
+      summary: List intercompany transactions
+      x-status: pending
+      x-ticket: LL-060
+      description: Planned (LL-060). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-060"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+    post:
+      tags:
+        - Consolidation
+      operationId: pendingPostIntercompanyTransactions
+      summary: Record an intercompany transaction
+      x-status: pending
+      x-ticket: LL-060
+      description: Planned (LL-060). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-060"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /intercompany/mismatches:
+    get:
+      tags:
+        - Consolidation
+      operationId: pendingGetIntercompanyMismatches
+      summary: Intercompany mismatch report
+      x-status: pending
+      x-ticket: LL-061
+      description: Planned (LL-061). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-061"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+  /notifications:
+    get:
+      tags:
+        - Approvals
+      operationId: pendingGetNotifications
+      summary: In-app notifications
+      x-status: pending
+      x-ticket: LL-082
+      description: Planned (LL-082). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-082"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+  /organization/export:
+    post:
+      tags:
+        - Platform
+      operationId: pendingPostOrganizationExport
+      summary: Export all organization data
+      x-status: pending
+      x-ticket: LL-111
+      description: Planned (LL-111). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-111"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /ready:
+    get:
+      tags:
+        - Health
+      operationId: getReady
+      summary: Readiness (database reachable)
+      x-status: implemented
+      responses:
+        '200':
+          description: Ready
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Ready'
+                  error:
+                    type: 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+      security: []
+  /users:
+    get:
+      tags:
+        - Users & access
+      operationId: pendingGetUsers
+      summary: List organization users
+      x-status: pending
+      x-ticket: LL-014
+      description: Planned (LL-014). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-014"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id001
+  /users/invitations:
+    post:
+      tags:
+        - Users & access
+      operationId: pendingPostUsersInvitations
+      summary: Invite a user with a role
+      x-status: pending
+      x-ticket: LL-014
+      description: Planned (LL-014). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-014"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+  /users/{userId}:
+    patch:
+      tags:
+        - Users & access
+      operationId: pendingPatchUsersUserid
+      summary: Change role or deactivate a user
+      x-status: pending
+      x-ticket: LL-014
+      description: Planned (LL-014). Currently answers `501 NOT_IMPLEMENTED` with `details.ticket = "LL-014"`.
+      responses:
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+      security: *id002
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: ll_session
+      description: HttpOnly session cookie set by /auth/login.
+    csrfHeader:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+      description: Must equal the ll_csrf cookie on POST/PUT/PATCH/DELETE.
+  schemas:
+    CurrencyCode:
+      type: string
+      enum:
+        - USD
+        - EUR
+        - GBP
+        - CHF
+        - CAD
+        - AUD
+        - SGD
+        - INR
+        - MXN
+        - JPY
+        - KRW
+        - KWD
+        - BHD
+    Money: &id008
+      type: string
+      pattern: ^-?\d+(\.\d+)?$
+      examples:
+        - '1250.00'
+    Meta:
+      type: object
+      properties:
+        requestId:
+          type: string
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details: {}
+    ErrorEnvelope:
+      type: object
+      required:
+        - data
+        - error
+      properties:
+        data:
+          type: 'null'
+        error:
+          $ref: '#/components/schemas/Error'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    PostingError:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - TOO_FEW_LINES
+            - INVALID_AMOUNT
+            - NON_POSITIVE_AMOUNT
+            - EXCESS_PRECISION
+            - UNKNOWN_CURRENCY
+            - ACCOUNT_NOT_FOUND
+            - ACCOUNT_INACTIVE
+            - ACCOUNT_NOT_POSTABLE
+            - ACCOUNT_CURRENCY_MISMATCH
+            - RATE_INVALID
+            - RATE_MISSING
+            - RATE_CONFLICT
+            - FUNCTIONAL_RATE_NOT_ONE
+            - ROUNDING_ACCOUNT_REQUIRED
+            - UNBALANCED
+        message:
+          type: string
+        line:
+          type: integer
+        details:
+          type: object
+          additionalProperties:
+            type: string
+    Health:
+      type: object
+      properties:
+        status:
+          const: ok
+        version:
+          type: string
+        uptimeSeconds:
+          type: integer
+    Ready:
+      type: object
+      properties:
+        status:
+          const: ready
+        checks:
+          type: object
+    Role:
+      type: string
+      enum:
+        - owner
+        - admin
+        - controller
+        - accountant
+        - approver
+        - auditor
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - organizationName
+        - displayName
+        - email
+        - password
+      properties:
+        organizationName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        displayName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 12
+          maxLength: 200
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    Profile:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+            displayName:
+              type: string
+        organization:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        permissions:
+          type: array
+          items:
+            type: string
+    LoginResponse:
+      allOf:
+        - $ref: '#/components/schemas/Profile'
+        - type: object
+          properties:
+            csrfToken:
+              type: string
+              description: Same value as the ll_csrf cookie; send as X-CSRF-Token.
+    AuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+          examples:
+            - journal.posted
+        targetType:
+          type: string
+        targetId:
+          type:
+            - string
+            - 'null'
+        entityId:
+          type:
+            - string
+            - 'null'
+        metadata:
+          type: object
+        actor:
+          type:
+            - object
+            - 'null'
+        requestId:
+          type:
+            - string
+            - 'null'
+        createdAt:
+          type: string
+          format: date-time
+    Entity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        functionalCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        countryCode:
+          type:
+            - string
+            - 'null'
+        timezone:
+          type: string
+          examples:
+            - Europe/Berlin
+        roundingAccountId:
+          type:
+            - string
+            - 'null'
+        retainedEarningsAccountId:
+          type:
+            - string
+            - 'null'
+        createdAt:
+          type: string
+          format: date-time
+    CreateEntityRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - name
+        - functionalCurrency
+      properties:
+        code:
+          type: string
+          pattern: ^[A-Z0-9][A-Z0-9-]{1,15}$
+        name:
+          type: string
+        functionalCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        countryCode:
+          type: string
+          pattern: ^[A-Z]{2}$
+        timezone:
+          type: string
+          default: UTC
+          description: Supported IANA zone; stored canonicalised.
+        chartTemplate:
+          type: string
+          enum:
+            - standard
+            - empty
+          default: standard
+    EntitySettingsRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        roundingAccountId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        retainedEarningsAccountId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+    AccountType:
+      type: string
+      enum:
+        - asset
+        - liability
+        - equity
+        - revenue
+        - expense
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type:
+            - string
+            - 'null'
+        type:
+          $ref: '#/components/schemas/AccountType'
+        parentId:
+          type:
+            - string
+            - 'null'
+        isPostable:
+          type: boolean
+        isActive:
+          type: boolean
+        currency:
+          type:
+            - string
+            - 'null'
+    CreateAccountRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - name
+        - type
+      properties:
+        code:
+          type: string
+          pattern: ^\d{3,12}(?:-\d{1,6}){0,3}$
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/AccountType'
+        parentId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        isPostable:
+          type: boolean
+          default: true
+        currency:
+          oneOf:
+            - $ref: '#/components/schemas/CurrencyCode'
+            - type: 'null'
+        description:
+          type: string
+    UpdateAccountRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+        isActive:
+          type: boolean
+        parentId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        description:
+          type: string
+    Period:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        entityId:
+          type: string
+        fiscalYear:
+          type: integer
+        periodNumber:
+          type: integer
+        name:
+          type: string
+          examples:
+            - FY2026-P01
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - open
+            - soft_closed
+            - closed
+        statusChangedAt:
+          type: string
+          format: date-time
+    CreateFiscalYearRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - startMonth
+      properties:
+        startMonth:
+          type: string
+          pattern: ^\d{4}-(0[1-9]|1[0-2])$
+        periods:
+          type: integer
+          minimum: 1
+          maximum: 13
+          default: 12
+    PeriodTransitionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - to
+      properties:
+        to:
+          type: string
+          enum:
+            - open
+            - soft_closed
+            - closed
+        reason:
+          type: string
+          maxLength: 500
+    FxRate:
+      type: object
+      properties:
+        id:
+          type: string
+        fromCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        toCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        rateType:
+          type: string
+          enum:
+            - spot
+            - average
+            - closing
+        rateDate:
+          type: string
+          format: date
+        rate:
+          type: string
+          examples:
+            - '1.0845'
+        createdAt:
+          type: string
+          format: date-time
+    CreateFxRateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - fromCurrency
+        - toCurrency
+        - rateDate
+        - rate
+      properties:
+        fromCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        toCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        rateDate:
+          type: string
+          format: date
+        rate:
+          type: string
+          pattern: ^\d{1,9}(\.\d{1,10})?$
+        rateType:
+          type: string
+          enum:
+            - spot
+            - average
+            - closing
+          default: spot
+    JournalLineInput:
+      type: object
+      additionalProperties: false
+      required:
+        - accountId
+        - side
+        - amount
+        - currency
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        side:
+          type: string
+          enum:
+            - debit
+            - credit
+        amount: *id008
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        rate:
+          type: string
+          description: Optional explicit rate (functional units per unit of currency).
+        memo:
+          type: string
+          maxLength: 240
+    JournalInput:
+      type: object
+      additionalProperties: false
+      required:
+        - entryDate
+        - memo
+        - lines
+      properties:
+        entryDate:
+          type: string
+          format: date
+        memo:
+          type: string
+          maxLength: 500
+        reference:
+          type: string
+          maxLength: 64
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/JournalLineInput'
+    CreateJournalRequest:
+      allOf:
+        - $ref: '#/components/schemas/JournalInput'
+        - type: object
+          properties:
+            post:
+              type: boolean
+              default: false
+    JournalSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        entryNumber:
+          type:
+            - string
+            - 'null'
+          examples:
+            - NW-US-2026-000007
+        status:
+          type: string
+          enum:
+            - draft
+            - posted
+            - reversed
+        source:
+          type: string
+        entryDate:
+          type: string
+          format: date
+        fiscalYear:
+          type: integer
+        periodId:
+          type: string
+        memo:
+          type: string
+        reference:
+          type:
+            - string
+            - 'null'
+        functionalCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        totalDebit: *id008
+        totalCredit: *id008
+        createdBy:
+          type:
+            - object
+            - 'null'
+        createdAt:
+          type: string
+          format: date-time
+        postedBy:
+          type:
+            - object
+            - 'null'
+        postedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    JournalLine:
+      type: object
+      properties:
+        lineNumber:
+          type: integer
+        accountId:
+          type: string
+        accountCode:
+          type: string
+        accountName:
+          type: string
+        side:
+          type: string
+          enum:
+            - debit
+            - credit
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        amount: *id008
+        amountMinor:
+          type: string
+        rate:
+          type: string
+        functionalAmount: *id008
+        functionalMinor:
+          type: string
+        memo:
+          type:
+            - string
+            - 'null'
+        isRoundingAdjustment:
+          type: boolean
+    JournalEntry:
+      allOf:
+        - $ref: '#/components/schemas/JournalSummary'
+        - type: object
+          properties:
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/JournalLine'
+    JournalPreview:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            status:
+              type: string
+        functionalCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        totalDebit: *id008
+        totalCredit: *id008
+        roundingAdjustment: *id008
+        lines:
+          type: array
+          items:
+            type: object
+    TrialBalanceRow:
+      type: object
+      properties:
+        accountId:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/AccountType'
+        depth:
+          type: integer
+        isHeader:
+          type: boolean
+        opening: *id008
+        periodDebit: *id008
+        periodCredit: *id008
+        closing: *id008
+        closingDebit: *id008
+        closingCredit: *id008
+    TrialBalance:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        fiscalYear:
+          type: integer
+        fiscalYearStart:
+          type: string
+          format: date
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        isBalanced:
+          type: boolean
+        priorYearEarnings: *id008
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrialBalanceRow'
+        totals:
+          type: object
+          properties:
+            openingDebit: *id008
+            openingCredit: *id008
+            periodDebit: *id008
+            periodCredit: *id008
+            closingDebit: *id008
+            closingCredit: *id008
+  responses:
+    BadRequest:
+      description: Validation failed (`VALIDATION_ERROR`, `BAD_REQUEST`)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            data: null
+            error:
+              code: VALIDATION_ERROR
+              message: Request validation failed
+              details:
+                - path: email
+                  message: Invalid email
+            meta:
+              requestId: 7f0c…
+    Unauthenticated:
+      description: No valid session
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            data: null
+            error:
+              code: UNAUTHENTICATED
+              message: Authentication required
+            meta:
+              requestId: 7f0c…
+    InvalidCredentials:
+      description: Wrong email or password
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            data: null
+            error:
+              code: INVALID_CREDENTIALS
+              message: Email or password is incorrect
+            meta:
+              requestId: 7f0c…
+    Forbidden:
+      description: Missing permission, CSRF failure or soft-closed period
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            data: null
+            error:
+              code: FORBIDDEN
+              message: You do not have permission to perform this action
+            meta:
+              requestId: 7f0c…
+    NotFound:
+      description: Not found or belongs to another organization
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            data: null
+            error:
+              code: NOT_FOUND
+              message: Entity not found
+            meta:
+              requestId: 7f0c…
+    Conflict:
+      description: State conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            data: null
+            error:
+              code: PERIOD_CLOSED
+              message: Period FY2025-P12 is closed
+            meta:
+              requestId: 7f0c…
+    Unprocessable:
+      description: Domain validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            data: null
+            error:
+              code: JOURNAL_INVALID
+              message: The journal entry is not valid
+              details:
+                errors:
+                  - code: UNBALANCED
+                    message: Debits 100.00 and credits 99.99 differ by 0.01 USD
+            meta:
+              requestId: 7f0c…
+    RateLimited:
+      description: Throttled; see Retry-After
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            data: null
+            error:
+              code: RATE_LIMITED
+              message: Too many attempts, try again later
+              details:
+                retryAfterSeconds: 30
+            meta:
+              requestId: 7f0c…
+    Unavailable:
+      description: Dependency unavailable or retryable conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            data: null
+            error:
+              code: NOT_READY
+              message: Database unavailable
+            meta:
+              requestId: 7f0c…
+    NotImplemented:
+      description: Planned endpoint
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            data: null
+            error:
+              code: NOT_IMPLEMENTED
+              message: Run period-end revaluation is planned but not implemented yet
+              details:
+                ticket: LL-052
+            meta:
+              requestId: 7f0c…
