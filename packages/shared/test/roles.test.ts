@@ -36,7 +36,7 @@ describe('boundary schemas', () => {
       registerSchema.safeParse({
         organizationName: 'Acme',
         displayName: 'A',
-        email: 'a@b.co',
+        email: 'a@b.example',
         password: 'short',
       }).success,
     ).toBe(false);
